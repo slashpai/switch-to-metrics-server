@@ -7,7 +7,7 @@ metadata:
   labels:
     k8s-app: metrics-server
   name: metrics-server
-  namespace: kube-system
+  namespace: openshift-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -58,7 +58,7 @@ metadata:
   labels:
     k8s-app: metrics-server
   name: metrics-server-auth-reader
-  namespace: kube-system
+  namespace: openshift-monitoring
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -66,7 +66,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: metrics-server
-  namespace: kube-system
+  namespace: openshift-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -81,7 +81,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: metrics-server
-  namespace: kube-system
+  namespace: openshift-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -96,7 +96,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: metrics-server
-  namespace: kube-system
+  namespace: openshift-monitoring
 ---
 apiVersion: v1
 kind: Service
@@ -104,7 +104,7 @@ metadata:
   labels:
     k8s-app: metrics-server
   name: metrics-server
-  namespace: kube-system
+  namespace: openshift-monitoring
 spec:
   ports:
   - name: https
@@ -120,7 +120,7 @@ metadata:
   labels:
     k8s-app: metrics-server
   name: metrics-server
-  namespace: kube-system
+  namespace: openshift-monitoring
 spec:
   selector:
     matchLabels:
@@ -170,7 +170,7 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-          runAsUser: 1000
+          # runAsUser: 1000
         volumeMounts:
         - mountPath: /tmp
           name: tmp-dir
@@ -194,6 +194,7 @@ spec:
   insecureSkipTLSVerify: true
   service:
     name: metrics-server
-    namespace: kube-system
+    namespace: openshift-monitoring
   version: v1beta1
   versionPriority: 100
+
