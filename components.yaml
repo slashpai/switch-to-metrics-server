@@ -136,10 +136,13 @@ spec:
       containers:
       - args:
         - --cert-dir=/tmp
-        - --secure-port=4443
+        - --secure-port=10250
         - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
         - --kubelet-use-node-status-port
         - --metric-resolution=15s
+        - --kubelet-certificate-authority=/etc/tls/kubelet-serving-ca-bundle/ca-bundle.crt
+        - --kubelet-client-certificate=/etc/tls/metrics-client-certs/tls.crt
+        - --kubelet-client-key=/etc/tls/metrics-client-certs/tls.key
         image: registry.k8s.io/metrics-server/metrics-server:v0.6.3
         imagePullPolicy: IfNotPresent
         livenessProbe:
@@ -151,7 +154,7 @@ spec:
           periodSeconds: 10
         name: metrics-server
         ports:
-        - containerPort: 4443
+        - containerPort: 10250
           name: https
           protocol: TCP
         readinessProbe:
@@ -170,10 +173,13 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-          # runAsUser: 1000
         volumeMounts:
         - mountPath: /tmp
           name: tmp-dir
+        - mountPath: /etc/tls/metrics-client-certs
+          name: secret-metrics-client-certs
+        - mountPath: /etc/tls/kubelet-serving-ca-bundle
+          name: configmap-kubelet-serving-ca-bundle
       nodeSelector:
         kubernetes.io/os: linux
       priorityClassName: system-cluster-critical
@@ -181,17 +187,25 @@ spec:
       volumes:
       - emptyDir: {}
         name: tmp-dir
+      - name: secret-metrics-client-certs
+        secret:
+          secretName: metrics-client-certs
+      - configMap:
+          name: kubelet-serving-ca-bundle
+        name: configmap-kubelet-serving-ca-bundle
 ---
 apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
   labels:
     k8s-app: metrics-server
   name: v1beta1.metrics.k8s.io
 spec:
   group: metrics.k8s.io
   groupPriorityMinimum: 100
-  insecureSkipTLSVerify: true
+  insecureSkipTLSVerify: false
   service:
     name: metrics-server
     namespace: openshift-monitoring
